@@ -1,0 +1,13 @@
+(*TESTE - EXEMPLO VÁLIDO*)
+PROGRAM TESTE123;
+VAR x, A, B : INTEGER;
+
+BEGIN
+     (*Testa as possibilidades do REPEAT*)
+     REPEAT 
+     BEGIN 
+	READLN(A,B);
+     END
+     UNTIL X > 10;
+
+END.
