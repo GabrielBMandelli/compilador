@@ -1,5 +1,8 @@
 package com.gabriel.compilador.util;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Stack;
 
 import com.gabriel.compilador.model.Parse;
@@ -125,9 +128,7 @@ public class FunctionsUtil {
 		return pilha;
 	}
 	
-	public static void analiseSintatica(Stack<Token> pilhaLexica) throws Exception {
-		Stack<Simbolo> pilhaExpansoes = new Stack<Simbolo>();
-		
+	public static void analiseSintatica(Stack<Token> pilhaLexica, Stack<Simbolo> pilhaExpansoes) throws Exception {
 		pilhaExpansoes = iniciaPilhaExpansoes();
 		
 		while (!pilhaExpansoes.isEmpty()) {
@@ -158,9 +159,8 @@ public class FunctionsUtil {
 	
 	public static Stack<Simbolo> iniciaPilhaExpansoes() {
 		Stack<Simbolo> pilha = new Stack<Simbolo>();
-		Simbolo simbolo;
 		
-		simbolo = getSimbolo("PROGRAMA");
+		Simbolo simbolo = getSimbolo("PROGRAMA");
 		pilha.add(0, new Simbolo(simbolo.getCodigo(), simbolo.getSimbolo()));
 		
 		return pilha;
@@ -244,6 +244,18 @@ public class FunctionsUtil {
 		}
 		
 		return derivacao;
+	}
+	
+	public static String getDateTime() { 
+		DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss"); 
+		Date date = new Date(); 
+		return dateFormat.format(date); 
+	}
+	
+	public static String getTime() { 
+		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss"); 
+		Date date = new Date(); 
+		return dateFormat.format(date); 
 	}
 
 }

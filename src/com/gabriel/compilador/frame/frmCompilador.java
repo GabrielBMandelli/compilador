@@ -15,7 +15,7 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
+//import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -42,7 +42,7 @@ public class frmCompilador extends JFrame {
 	private Stack<Simbolo> pilhaSintatica = new Stack<Simbolo>();
 	
 	private String arquivoAtual = "";
-	private Boolean debug = false;
+	//private Boolean debug = false;
 
 	/**
 	 * 
@@ -73,15 +73,16 @@ public class frmCompilador extends JFrame {
 	}
 	
 	private void addConsole(String texto) {
+		String text = FunctionsUtil.getTime() + " # " + texto;
 		if (txtConsole.getText().trim().equals(""))
-			txtConsole.setText(texto);
+			txtConsole.setText(text);
 		else
-			txtConsole.setText(txtConsole.getText() + "\n" + texto);
+			txtConsole.setText(txtConsole.getText() + "\n" + text);
 	}
 	
 	private void limparValores() {
 		arquivoAtual = "";
-		debug = false;
+		//debug = false;
 		
 		setConsole("");
 		
@@ -132,9 +133,20 @@ public class frmCompilador extends JFrame {
 	private void compilar() {
 		String conteudo = getTexto();
 		
-		analiseLexica(conteudo);
+		try {
+			addConsole("Inicia análise Léxica...");
+			pilhaLexica = FunctionsUtil.analiseLexica(conteudo);
+			addConsole("Análise Léxica concluída com sucesso!");
+		
+			addConsole("Inicia análise Sintática...");
+			FunctionsUtil.analiseSintatica(pilhaLexica, pilhaSintatica);
+			addConsole("Análise Sintática concluída com sucesso");
+		} catch (Exception e) {
+			addConsole(e.getMessage());
+		}
 	}
 	
+	/*
 	private void analiseLexica(String conteudo) {		
 		try {
 			addConsole("Inicia análise Léxica...");
@@ -144,11 +156,11 @@ public class frmCompilador extends JFrame {
 			setConsole(e.getMessage());
 		}
 		
-//		modeloTabLexica.setNumRows(0);
-//		
-//		for (Token t : pilhaLexica) {
-//			modeloTabLexica.addRow(new Object[] {t.getCodigo(), t.getValor()});
-//		}
+		modeloTabLexica.setNumRows(0);
+		
+		for (Token t : pilhaLexica) {
+			modeloTabLexica.addRow(new Object[] {t.getCodigo(), t.getValor()});
+		}
 	}
 	
 	private void analiseSintatica() throws Exception {
@@ -199,6 +211,7 @@ public class frmCompilador extends JFrame {
 		if (pilhaSintatica.isEmpty())
 			JOptionPane.showMessageDialog(null, "Análise Sintática concluída.");
 	}
+	*/
 	
 	private void initComponents() {
 		painelTopo = new JPanel();
@@ -267,7 +280,7 @@ public class frmCompilador extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
 				try {
-					analiseSintatica();
+					//analiseSintatica();
 				} catch (Exception e) {
 					addConsole(e.getMessage());
 				}
