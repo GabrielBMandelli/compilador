@@ -15,6 +15,7 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -58,8 +59,7 @@ public class frmCompilador extends JFrame {
 	private Stack<Simbolo> pilhaSintatica = new Stack<Simbolo>();
 	
 	private String arquivoAtual = "";
-	private Boolean debug = false;
-
+	
 	/**
 	 * 
 	 */
@@ -99,7 +99,6 @@ public class frmCompilador extends JFrame {
 	
 	private void limparValores() {
 		arquivoAtual = "";
-		//debug = false;
 		
 		setConsole("");
 		
@@ -149,7 +148,6 @@ public class frmCompilador extends JFrame {
 	}
 	
 	private void setDebugON() {
-		this.debug = true;
 		btnNewFile.setEnabled(false);
 		btnOpen.setEnabled(false);
 		btnSave.setEnabled(false);
@@ -162,7 +160,6 @@ public class frmCompilador extends JFrame {
 	}
 	
 	private void setDebugOFF() {
-		this.debug = false;
 		btnNewFile.setEnabled(true);
 		btnOpen.setEnabled(true);
 		btnSave.setEnabled(true);
@@ -181,43 +178,105 @@ public class frmCompilador extends JFrame {
 			return;
 		
 		try {
-			addConsole("Inicia análise Léxica...");
+			addConsole("Inicia análise léxica...");
 			pilhaLexica = FunctionsUtil.analiseLexica(conteudo);
-			addConsole("Análise Léxica concluída com sucesso!");
+			addConsole("Análise léxica concluída com sucesso!");
 		
-			addConsole("Inicia análise Sintática...");
+			addConsole("Inicia análise sintática...");
 			FunctionsUtil.analiseSintatica(pilhaLexica, pilhaSintatica);
-			addConsole("Análise Sintática concluída com sucesso");
+			addConsole("Análise sintática concluída com sucesso");
 		} catch (Exception e) {
 			addConsole(e.getMessage());
 		}
 	}
 	
-	private void debugar() {
+	private void debugar() {		
+		String conteudo = getTexto();
+		
+		if (conteudo.trim().equals(""))
+			return;
+		
 		setDebugON();
+		
+		try {
+			addConsole("Inicia análise léxica...");
+			pilhaLexica = FunctionsUtil.analiseLexica(conteudo);
+			addConsole("Análise léxica concluída com sucesso!");
+			
+			modeloTabLexica.setNumRows(0);			
+			for (Token t : pilhaLexica) {
+				modeloTabLexica.addRow(new Object[] {t.getCodigo(), t.getValor()});
+			}
+			
+			addConsole("Inicia análise sintática...");
+			pilhaSintatica = FunctionsUtil.iniciaPilhaExpansoes();
+			
+			modeloTabSintatica.setNumRows(0);			
+			for (Simbolo t : pilhaSintatica) {
+				modeloTabSintatica.addRow(new Object[] {t.getCodigo(), t.getSimbolo()});
+			}
+		} catch (Exception e) {
+			addConsole(e.getMessage());
+			parar();
+		}
 	}
 	
-	private void stopDebug() {
+	private void proximo() throws Exception {
+		if (!pilhaSintatica.isEmpty()) {
+			Simbolo X = pilhaSintatica.get(0);
+			Token a = pilhaLexica.get(0);
+			
+			if (FunctionsUtil.isTerminal(X)) {
+				if (X.getCodigo() == a.getCodigo()) {
+					pilhaSintatica.remove(0);
+					pilhaLexica.remove(0);
+				} else {
+					throw new Exception("'" + X.getSimbolo() + "' esperado na linha " + a.getLinha());
+				}
+			} else {
+				Stack<Simbolo> derivacao = FunctionsUtil.parsing(X.getCodigo(), a.getCodigo());
+				
+				if (derivacao != null) {
+					pilhaSintatica.remove(0);
+					while (!derivacao.isEmpty()) {
+						pilhaSintatica.add(0, derivacao.pop());
+					}
+				} else {
+					throw new Exception("Símbolo '" + a.getValor() + "' inválido na linha " + a.getLinha());
+				}
+			}
+		}
+		
+		if (pilhaSintatica.isEmpty()) {
+			JOptionPane.showMessageDialog(null, "A análise sintática terminou.");
+			addConsole("Análise sintática concluída com sucesso!");
+			parar();
+		} else {		
+			modeloTabLexica.setNumRows(0);			
+			for (Token t : pilhaLexica) {
+				modeloTabLexica.addRow(new Object[] {t.getCodigo(), t.getValor()});
+			}
+			
+			modeloTabSintatica.setNumRows(0);			
+			for (Simbolo t : pilhaSintatica) {
+				modeloTabSintatica.addRow(new Object[] {t.getCodigo(), t.getSimbolo()});
+			}
+		}
+	}
+	
+	private void parar() {
 		setDebugOFF();
+		
+		pilhaLexica = null;
+		pilhaLexica = new Stack<Token>();
+		modeloTabLexica.setNumRows(0);
+		
+		pilhaSintatica = null;
+		pilhaSintatica = new Stack<Simbolo>();
+		modeloTabSintatica.setNumRows(0);
 	}
 	
 	/*
-	private void analiseLexica(String conteudo) {		
-		try {
-			addConsole("Inicia análise Léxica...");
-			pilhaLexica = FunctionsUtil.analiseLexica(conteudo);
-			addConsole("Análise Léxica concluída com sucesso!");
-		} catch (Exception e) {
-			setConsole(e.getMessage());
-		}
-		
-		modeloTabLexica.setNumRows(0);
-		
-		for (Token t : pilhaLexica) {
-			modeloTabLexica.addRow(new Object[] {t.getCodigo(), t.getValor()});
-		}
-	}
-	
 	private void analiseSintatica() throws Exception {
 		if (debug) {
 			if (!pilhaSintatica.isEmpty()) {
@@ -352,7 +411,12 @@ public class frmCompilador extends JFrame {
 		btnNextStep.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
-				
+				try {
+					proximo();
+				} catch (Exception e) {
+					addConsole(e.getMessage());
+					parar();
+				}
 			}
 		});
 		painelTopo.add(btnNextStep);
@@ -365,7 +429,7 @@ public class frmCompilador extends JFrame {
 		btnStopDebug.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
-				stopDebug();
+				parar();
 			}
 		});
 		painelTopo.add(btnStopDebug);
