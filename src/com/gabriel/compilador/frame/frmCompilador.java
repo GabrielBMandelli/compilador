@@ -15,7 +15,6 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-//import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -35,11 +34,22 @@ public class frmCompilador extends JFrame {
 	private JPanel painelTabelas;
 	private JPanel painelConsole;
 	
-	private JButton btnStop;
+	private JButton btnNewFile;
+	private JButton btnOpen;
+	private JButton btnSave;
+	private JButton btnRun;
+	private JButton btnDebug;
+	private JButton btnNextStep;
+	private JButton btnStopDebug;
 	
-	private JTextArea txtEditor, txtConsole;
-	private JTable tabLexica, tabSintatica;
-	private JLabel lblPilhaLexica, lblPilhaSintatica, lblDebugOff, lblDebugOn;
+	private JTextArea txtEditor;
+	private JTextArea txtConsole;
+	
+	private JTable tabLexica;
+	private JTable tabSintatica;
+	
+	private JLabel lblPilhaLexica;
+	private JLabel lblPilhaSintatica;
 	
 	private DefaultTableModel modeloTabLexica = new DefaultTableModel();
 	private DefaultTableModel modeloTabSintatica = new DefaultTableModel();
@@ -48,7 +58,7 @@ public class frmCompilador extends JFrame {
 	private Stack<Simbolo> pilhaSintatica = new Stack<Simbolo>();
 	
 	private String arquivoAtual = "";
-	//private Boolean debug = false;
+	private Boolean debug = false;
 
 	/**
 	 * 
@@ -64,7 +74,7 @@ public class frmCompilador extends JFrame {
 		this.setResizable(false);
 		
 		initComponents();
-		setDebugOff();
+		setDebugOFF();
 	}
 	
 	public void setTexto(String texto) {
@@ -134,23 +144,41 @@ public class frmCompilador extends JFrame {
             }
         }
 		
-    	FileUtil.gravarArquivo(arquivoAtual, getTexto());
+		if (!arquivoAtual.equals(""))
+			FileUtil.gravarArquivo(arquivoAtual, getTexto());
 	}
 	
-	private void setDebugOn() {
-		lblDebugOff.setVisible(false);
-		lblDebugOn.setVisible(true);
-		btnStop.setVisible(true);
+	private void setDebugON() {
+		this.debug = true;
+		btnNewFile.setEnabled(false);
+		btnOpen.setEnabled(false);
+		btnSave.setEnabled(false);
+		btnRun.setEnabled(false);
+		btnDebug.setEnabled(false);
+		btnStopDebug.setEnabled(true);
+		btnNextStep.setEnabled(true);
+		txtEditor.setEditable(false);
+		txtEditor.setFocusable(false);
 	}
 	
-	private void setDebugOff() {
-		lblDebugOn.setVisible(false);
-		lblDebugOff.setVisible(true);
-		btnStop.setVisible(false);
+	private void setDebugOFF() {
+		this.debug = false;
+		btnNewFile.setEnabled(true);
+		btnOpen.setEnabled(true);
+		btnSave.setEnabled(true);
+		btnRun.setEnabled(true);
+		btnDebug.setEnabled(true);
+		btnStopDebug.setEnabled(false);
+		btnNextStep.setEnabled(false);
+		txtEditor.setEditable(true);
+		txtEditor.setFocusable(true);
 	}
 	
 	private void compilar() {
 		String conteudo = getTexto();
+		
+		if (conteudo.trim().equals(""))
+			return;
 		
 		try {
 			addConsole("Inicia análise Léxica...");
@@ -166,7 +194,11 @@ public class frmCompilador extends JFrame {
 	}
 	
 	private void debugar() {
-		setDebugOn();
+		setDebugON();
+	}
+	
+	private void stopDebug() {
+		setDebugOFF();
 	}
 	
 	/*
@@ -244,9 +276,10 @@ public class frmCompilador extends JFrame {
 		painelTopo.setBorder(BorderFactory.createRaisedBevelBorder());
 		
 		Icon icoNewFile = new ImageIcon("src/com/gabriel/compilador/frame/img/file.png");
-		JButton btnNewFile = new JButton(icoNewFile);
+		btnNewFile = new JButton(icoNewFile);
 		btnNewFile.setBounds(10, 5, 35, 35);
 		btnNewFile.setFocusable(false);
+		btnNewFile.setToolTipText("Novo Arquivo");
 		btnNewFile.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -256,9 +289,10 @@ public class frmCompilador extends JFrame {
 		painelTopo.add(btnNewFile);
 		
 		Icon icoOpen = new ImageIcon("src/com/gabriel/compilador/frame/img/folder.png");
-		JButton btnOpen = new JButton(icoOpen);
+		btnOpen = new JButton(icoOpen);
 		btnOpen.setBounds(50, 5, 35, 35);
 		btnOpen.setFocusable(false);
+		btnOpen.setToolTipText("Abrir Arquivo");
 		btnOpen.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -272,9 +306,10 @@ public class frmCompilador extends JFrame {
 		painelTopo.add(btnOpen);
 		
 		Icon icoSave = new ImageIcon("src/com/gabriel/compilador/frame/img/save.png");
-		JButton btnSave = new JButton(icoSave);
+		btnSave = new JButton(icoSave);
 		btnSave.setBounds(90, 5, 35, 35);
 		btnSave.setFocusable(false);
+		btnSave.setToolTipText("Salvar Arquivo");
 		btnSave.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -284,9 +319,10 @@ public class frmCompilador extends JFrame {
 		painelTopo.add(btnSave);
 		
 		Icon icoRun = new ImageIcon("src/com/gabriel/compilador/frame/img/play.png");
-		JButton btnRun = new JButton(icoRun);
+		btnRun = new JButton(icoRun);
 		btnRun.setBounds(130, 5, 35, 35);
 		btnRun.setFocusable(false);
+		btnRun.setToolTipText("Compilar");
 		btnRun.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -295,45 +331,44 @@ public class frmCompilador extends JFrame {
 		});
 		painelTopo.add(btnRun);
 		
-		Icon icoDebug = new ImageIcon("src/com/gabriel/compilador/frame/img/skip.png");
-		JButton btnDebug = new JButton(icoDebug);
+		Icon icoDebug = new ImageIcon("src/com/gabriel/compilador/frame/img/bug.png");
+		btnDebug = new JButton(icoDebug);
 		btnDebug.setBounds(170, 5, 35, 35);
 		btnDebug.setFocusable(false);
+		btnDebug.setToolTipText("Debugar");
 		btnDebug.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
-				try {
-					debugar();
-				} catch (Exception e) {
-					addConsole(e.getMessage());
-				}
+				debugar();
 			}
 		});
 		painelTopo.add(btnDebug);
 		
-		Icon icoStop = new ImageIcon("src/com/gabriel/compilador/frame/img/stop.png");
-		btnStop = new JButton(icoStop);
-		btnStop.setBounds(310, 5, 35, 35);
-		btnStop.setFocusable(false);
-		btnStop.addActionListener(new ActionListener() {
+		Icon icoNext = new ImageIcon("src/com/gabriel/compilador/frame/img/next.png");
+		btnNextStep = new JButton(icoNext);
+		btnNextStep.setBounds(210, 5, 35, 35);
+		btnNextStep.setFocusable(false);
+		btnNextStep.setToolTipText("Próximo");
+		btnNextStep.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
-				setDebugOff();
+				
 			}
 		});
-		painelTopo.add(btnStop);
+		painelTopo.add(btnNextStep);
 		
-		lblDebugOff = new JLabel("DEBUG: OFF");
-		lblDebugOff.setBounds(213, 4, 100, 40);
-		lblDebugOff.setHorizontalAlignment(JLabel.LEFT);
-		lblDebugOff.setFont(new Font("Arial", Font.BOLD, 14));
-		painelTopo.add(lblDebugOff);
-		
-		lblDebugOn = new JLabel("DEBUG: ON");
-		lblDebugOn.setBounds(213, 4, 100, 40);
-		lblDebugOn.setHorizontalAlignment(JLabel.LEFT);
-		lblDebugOn.setFont(new Font("Arial", Font.BOLD, 14));
-		painelTopo.add(lblDebugOn);
+		Icon icoStop = new ImageIcon("src/com/gabriel/compilador/frame/img/stop.png");
+		btnStopDebug = new JButton(icoStop);
+		btnStopDebug.setBounds(250, 5, 35, 35);
+		btnStopDebug.setFocusable(false);
+		btnStopDebug.setToolTipText("Parar Debug");
+		btnStopDebug.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+				stopDebug();
+			}
+		});
+		painelTopo.add(btnStopDebug);
 		
 		this.getContentPane().add(painelTopo);
 

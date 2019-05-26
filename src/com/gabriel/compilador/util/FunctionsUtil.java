@@ -76,6 +76,9 @@ public class FunctionsUtil {
 						if (!comentario)
 							break;
 							
+						if (isQuebraLinha(conteudo.charAt(i)))
+							contLinha++;
+						
 						i++;
 						car = ' ';
 						if ((i + 1) != conteudo.length())
